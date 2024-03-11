@@ -110,6 +110,11 @@ struct theme {
 	struct lab_data_buffer *corner_top_left_inactive_normal;
 	struct lab_data_buffer *corner_top_right_inactive_normal;
 
+	struct lab_data_buffer *shadow_corner_active;
+	struct lab_data_buffer *shadow_edge_active;
+	struct lab_data_buffer *shadow_corner_inactive;
+	struct lab_data_buffer *shadow_edge_inactive;
+
 	/* not set in rc.xml/themerc, but derived from font & padding_height */
 	int osd_window_switcher_item_height;
 };

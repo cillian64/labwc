@@ -950,6 +950,84 @@ create_corners(struct theme *theme)
 	theme->corner_top_right_inactive_normal = rounded_rect(&ctx);
 }
 
+/*
+ * Draw a linear gradient in a rectangle 1 pixel tall and `width` pixels
+ * wide, with a maximum opacity of `opacity` at the left edge fading to
+ * 0 at the right edge, as would be found at the right edge of a window.
+ */
+static void
+shadow_edge_gradient(cairo_t *cr, int width, double opacity)
+{
+	cairo_surface_t *surf = cairo_get_target(cr);
+	cairo_pattern_t *pat = cairo_pattern_create_linear(
+		0.0, 0.0, (double)width, 0.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.0, 0.0, 0.0, 0.0, opacity);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0, 0.0, 0.0, 0.0, 0.0);
+	cairo_save(cr);
+	cairo_rectangle(cr, 0.0, 0.0, (double)width, 1.0);
+	cairo_clip(cr);
+	cairo_set_source(cr, pat);
+	cairo_mask(cr, pat);
+	cairo_restore(cr);
+
+	cairo_pattern_destroy(pat);
+	cairo_surface_flush(surf);
+}
+
+/*
+ * Draw a gradient corner square, with the centre of the radius at
+ * the top-left of the buffer, as found at the bottom-right of a window.  The
+ * max opacity is `opacity`, fading to 0 at the other corners.
+ */
+static void
+shadow_corner_gradient(cairo_t *cr, int radius, double opacity)
+{
+	cairo_surface_t *surf = cairo_get_target(cr);
+	cairo_pattern_t *pat = cairo_pattern_create_radial(
+		0.0, 0.0, 0.0, 0.0, 0.0, (double)radius);
+	cairo_pattern_add_color_stop_rgba(pat, 0.0, 0.0, 0.0, 0.0, opacity);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0, 0.0, 0.0, 0.0, 0.0);
+	cairo_save(cr);
+	cairo_rectangle(cr, 0.0, 0.0, (double)radius, (double)radius);
+	cairo_clip(cr);
+	cairo_set_source(cr, pat);
+	cairo_mask(cr, pat);
+	cairo_restore(cr);
+
+	cairo_pattern_destroy(pat);
+	cairo_surface_flush(surf);
+}
+
+static void
+create_shadows(struct theme *theme)
+{
+	theme->shadow_corner_active = buffer_create_cairo(
+		rc.dropshadow_radius_active,
+		rc.dropshadow_radius_active, 1.0, true);
+	theme->shadow_edge_active = buffer_create_cairo(
+		rc.dropshadow_radius_active, 1, 1.0, true);
+	theme->shadow_corner_inactive = buffer_create_cairo(
+		rc.dropshadow_radius_inactive,
+		rc.dropshadow_radius_inactive, 1.0, true);
+	theme->shadow_edge_inactive = buffer_create_cairo(
+		rc.dropshadow_radius_inactive, 1, 1.0, true);
+	if (!theme->shadow_corner_active || !theme->shadow_edge_active
+			|| !theme->shadow_corner_inactive
+			|| !theme->shadow_edge_inactive) {
+		wlr_log(WLR_ERROR, "Failed to allocate buffer for shadow");
+		return;
+	}
+
+	shadow_edge_gradient(theme->shadow_edge_active->cairo,
+		rc.dropshadow_radius_active, rc.dropshadow_opacity_active);
+	shadow_corner_gradient(theme->shadow_corner_active->cairo,
+		rc.dropshadow_radius_active, rc.dropshadow_opacity_active);
+	shadow_edge_gradient(theme->shadow_edge_inactive->cairo,
+		rc.dropshadow_radius_inactive, rc.dropshadow_opacity_inactive);
+	shadow_corner_gradient(theme->shadow_corner_inactive->cairo,
+		rc.dropshadow_radius_inactive, rc.dropshadow_opacity_inactive);
+}
+
 static void
 post_processing(struct theme *theme)
 {
@@ -1032,6 +1110,7 @@ theme_init(struct theme *theme, const char *theme_name)
 	post_processing(theme);
 	create_corners(theme);
 	load_buttons(theme);
+	create_shadows(theme);
 }
 
 void
@@ -1041,4 +1120,8 @@ theme_finish(struct theme *theme)
 	zdrop(&theme->corner_top_left_inactive_normal);
 	zdrop(&theme->corner_top_right_active_normal);
 	zdrop(&theme->corner_top_right_inactive_normal);
+	zdrop(&theme->shadow_corner_active);
+	zdrop(&theme->shadow_edge_active);
+	zdrop(&theme->shadow_corner_inactive);
+	zdrop(&theme->shadow_edge_inactive);
 }
