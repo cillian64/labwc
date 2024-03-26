@@ -1026,6 +1026,28 @@ create_shadows(struct theme *theme)
 		rc.dropshadow_radius_inactive, rc.dropshadow_opacity_inactive);
 	shadow_corner_gradient(theme->shadow_corner_inactive->cairo,
 		rc.dropshadow_radius_inactive, rc.dropshadow_opacity_inactive);
+
+	// XXX DEBUGGING XXX
+	wlr_log(WLR_ERROR, "Drawing active shadows %d %d %f %d",
+		rc.dropshadow_radius_active,
+		rc.dropshadow_inset_active,
+		rc.dropshadow_opacity_active,
+		rc.dropshadow_enabled_active);
+	wlr_log(WLR_ERROR, "Drawing inactive shadows %d %d %f %d",
+		rc.dropshadow_radius_inactive,
+		rc.dropshadow_inset_inactive,
+		rc.dropshadow_opacity_inactive,
+		rc.dropshadow_enabled_inactive);
+	cairo_surface_t *surf;
+	surf = cairo_get_target(theme->shadow_corner_active->cairo);
+	cairo_surface_write_to_png(surf, "/tmp/corner_active.png");
+	surf = cairo_get_target(theme->shadow_corner_inactive->cairo);
+	cairo_surface_write_to_png(surf, "/tmp/corner_inactive.png");
+	surf = cairo_get_target(theme->shadow_edge_active->cairo);
+	cairo_surface_write_to_png(surf, "/tmp/edge_active.png");
+	surf = cairo_get_target(theme->shadow_edge_inactive->cairo);
+	cairo_surface_write_to_png(surf, "/tmp/edge_inactive.png");
+	// XXX DEBUGGING XXX
 }
 
 static void
